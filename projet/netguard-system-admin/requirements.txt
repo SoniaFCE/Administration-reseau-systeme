@@ -1,0 +1,69 @@
+# NetGuard - System & Network Administration Toolkit
+# Dépendances Python requises
+
+# Core
+python-dotenv>=0.19.0
+PyYAML>=6.0
+argparse>=1.4.0
+
+# Surveillance système
+psutil>=5.9.0
+GPUtil>=1.4.0
+netifaces>=0.11.0
+
+# Réseau
+python-nmap>=0.7.1
+scapy>=2.4.5
+socket>=1.0.0
+ipaddress>=1.0.23
+
+# Analyse de données
+pandas>=1.5.0
+numpy>=1.21.0
+matplotlib>=3.5.0
+seaborn>=0.12.0
+
+# Notifications
+requests>=2.28.0
+smtplib>=0.0.0
+slack-sdk>=3.11.0
+
+# Sécurité
+cryptography>=38.0.0
+paramiko>=2.11.0
+pyOpenSSL>=23.0.0
+
+# Base de données
+sqlite3>=3.0.0
+sqlalchemy>=1.4.0
+
+# Date/Heure
+pytz>=2022.1
+python-dateutil>=2.8.2
+
+# Logging
+loguru>=0.6.0
+colorlog>=6.7.0
+
+# CLI
+rich>=12.0.0
+click>=8.1.0
+progress>=1.6
+
+# Tests
+pytest>=7.0.0
+pytest-cov>=3.0.0
+mock>=4.0.3
+
+# Développement
+black>=22.3.0
+flake8>=4.0.1
+isort>=5.10.1
+mypy>=0.971
+
+# Windows specific
+pywin32>=302; platform_system == "Windows"
+wmi>=1.5.1; platform_system == "Windows"
+
+# Linux specific
+pyroute2>=0.7.0; platform_system == "Linux"

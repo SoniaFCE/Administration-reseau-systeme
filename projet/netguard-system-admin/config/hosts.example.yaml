@@ -1,0 +1,237 @@
+# NetGuard - Liste des hôtes à surveiller
+# Copiez ce fichier en hosts.yaml pour commencer
+
+# Liste des serveurs à surveiller
+servers:
+  # Exemple de serveur web
+  - name: "web-server-01"
+    ip: "192.168.1.10"
+    hostname: "web01.example.com"
+    ssh_port: 22
+    username: "admin"
+    # Utiliser soit le mot de passe, soit la clé SSH (une seule méthode)
+    # password: "votre-mot-de-passe"
+    ssh_key: "/home/user/.ssh/id_rsa"
+    type: "web"  # web, database, monitoring, application, etc.
+    os: "Ubuntu 22.04"
+    
+    # Services à surveiller sur ce serveur
+    services:
+      - "nginx"
+      - "mysql"
+      - "php-fpm"
+      - "redis"
+    
+    # Alertes spécifiques pour ce serveur
+    alerts:
+      cpu_threshold: 85  # Seuil CPU (%) pour déclencher une alerte
+      memory_threshold: 80  # Seuil mémoire (%) pour déclencher une alerte
+      disk_threshold: 90  # Seuil disque (%) pour déclencher une alerte
+      temperature_threshold: 70  # Seuil température (°C) pour déclencher une alerte
+    
+    # Exclure certains checks pour ce serveur
+    excluded_checks:
+      - "temperature"  # Ne pas vérifier la température
+    
+    # Checks supplémentaires spécifiques
+    custom_checks:
+      - name: "disque_plein"
+        type: "disk"
+        path: "/var/www/html"
+        threshold: 95
+        command: "df -h /var/www/html | awk 'NR==2 {print $5}' | tr -d '%'"
+      - name: "nginx_respond"
+        type: "http"
+        url: "http://web01.example.com"
+        expected_status: 200
+        timeout: 5
+
+  # Exemple de serveur de base de données
+  - name: "db-server-01"
+    ip: "192.168.1.11"
+    hostname: "db01.example.com"
+    ssh_port: 22
+    username: "admin"
+    ssh_key: "/home/user/.ssh/id_rsa"
+    type: "database"
+    os: "Debian 11"
+    
+    services:
+      - "postgresql"
+      - "redis"
+      - "pgpool"
+    
+    alerts:
+      cpu_threshold: 90
+      memory_threshold: 85
+      disk_threshold: 95
+    
+    # Configuration spécifique PostgreSQL
+    postgresql:
+      port: 5432
+      databases:
+        - "netguard_db"
+        - "app_db"
+      users:
+        - "netguard_user"
+        - "app_user"
+
+  # Exemple de serveur de monitoring
+  - name: "monitor-server"
+    ip: "192.168.1.12"
+    hostname: "monitor.example.com"
+    username: "admin"
+    type: "monitoring"
+    os: "CentOS 8"
+    
+    services:
+      - "prometheus"
+      - "grafana"
+      - "node_exporter"
+      - "alertmanager"
+      - "blackbox_exporter"
+    
+    # Configuration des services de monitoring
+    monitoring:
+      prometheus:
+        port: 9090
+        scrape_interval: "15s"
+        evaluation_interval: "15s"
+      grafana:
+        port: 3000
+        admin_user: "admin"
+        # admin_password: ""  # Ne pas stocker en clair!
+      node_exporter:
+        port: 9100
+
+  # Exemple de serveur applicatif
+  - name: "app-server-01"
+    ip: "192.168.1.13"
+    hostname: "app01.example.com"
+    ssh_port: 22
+    username: "deploy"
+    ssh_key: "/home/user/.ssh/id_rsa"
+    type: "application"
+    os: "Ubuntu 20.04"
+    
+    services:
+      - "docker"
+      - "nginx"
+      - "nodejs"
+    
+    # Configuration Docker
+    docker:
+      containers:
+        - "netguard-web"
+        - "netguard-api"
+        - "netguard-worker"
+      monitor_container_resources: true
+      container_cpu_threshold: 80
+      container_memory_threshold: 70
+
+# Groupes de serveurs
+server_groups:
+  - name: "web_servers"
+    description: "Tous les serveurs web"
+    members:
+      - "web-server-01"
+    
+    # Configuration spécifique au groupe
+    alerts:
+      cpu_threshold: 80
+      memory_threshold: 75
+    
+    # Checks de groupe
+    group_checks:
+      - name: "load_balancing"
+        type: "http"
+        url: "http://loadbalancer.example.com/health"
+        expected_status: 200
+
+  - name: "database_servers"
+    description: "Tous les serveurs de base de données"
+    members:
+      - "db-server-01"
+    
+    alerts:
+      cpu_threshold: 90
+      memory_threshold: 85
+      disk_threshold: 95
+    
+    group_checks:
+      - name: "replication_status"
+        type: "custom"
+        command: "psql -U netguard_user -c \"SELECT pg_is_in_recovery();\""
+        expected_output: "f"  # false signifie qu'il s'agit du maître
+
+  - name: "monitoring_stack"
+    description: "Stack de monitoring"
+    members:
+      - "monitor-server"
+    
+    alerts:
+      cpu_threshold: 70
+      memory_threshold: 60
+
+# Réseaux à surveiller
+networks:
+  - name: "local_lan"
+    subnet: "192.168.1.0/24"
+    description: "Réseau local"
+    scan_frequency: "0 * * * *"  # Toutes les heures
+    
+    # Hôtes spécifiques à surveiller dans ce réseau
+    specific_hosts:
+      - "192.168.1.1"  # Routeur
+      - "192.168.1.10"  # web-server-01
+    
+    # Exclure certains hôtes
+    excluded_hosts:
+      - "192.168.1.200-192.168.1.254"
+
+  - name: "dmz"
+    subnet: "192.168.2.0/24"
+    description: "DMZ"
+    scan_frequency: "0 */6 * * *"  # Toutes les 6 heures
+
+# Configuration des groupes de services
+service_groups:
+  - name: "web_services"
+    description: "Services web"
+    members:
+      - "nginx"
+      - "apache2"
+      - "httpd"
+    
+    checks:
+      - type: "process"
+        threshold: 1  # Au moins 1 processus doit être en cours
+      - type: "port"
+        ports: [80, 443]
+
+  - name: "database_services"
+    description: "Services de base de données"
+    members:
+      - "mysql"
+      - "postgresql"
+      - "mongod"
+      - "redis-server"
+    
+    checks:
+      - type: "process"
+        threshold: 1
+      - type: "port"
+        ports: [3306, 5432, 27017, 6379]
+
+  - name: "monitoring_services"
+    description: "Services de monitoring"
+    members:
+      - "prometheus"
+      - "grafana-server"
+      - "node_exporter"
+    
+    checks:
+      - type: "process"
+        threshold: 1
+      - type: "port"
+        ports: [9090, 3000, 9100]

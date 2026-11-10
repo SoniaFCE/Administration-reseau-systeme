@@ -1,0 +1,450 @@
+# NetGuard - Configuration par défaut
+# Copiez ce fichier en config.yaml pour commencer
+
+# Configuration générale
+project_name: "NetGuard"
+version: "1.0.0"
+log_level: "INFO"
+log_file: "/var/log/netguard/netguard.log"
+temp_dir: "/tmp/netguard"
+
+# ============================================
+# ADMINISTRATION SYSTÈME
+# ============================================
+
+# Surveillance système
+system_monitor:
+  enabled: true
+  check_interval: 60  # en secondes
+  
+  # Seuil d'alerte pour le CPU (% d'utilisation)
+  cpu_threshold: 90
+  
+  # Seuil d'alerte pour la RAM (% d'utilisation)
+  memory_threshold: 85
+  
+  # Seuil d'alerte pour le disque (% d'utilisation)
+  disk_threshold: 90
+  
+  # Seuil d'alerte pour la température (°C)
+  temperature_threshold: 75
+  
+  # Services à surveiller
+  services_to_monitor:
+    - "nginx"
+    - "apache2"
+    - "mysql"
+    - "postgresql"
+    - "redis"
+    - "memcached"
+    - "docker"
+    - "sshd"
+    - "cron"
+  
+  # Fréquence de génération des rapports (en heures)
+  report_frequency: 24
+
+# Analyse des performances
+performance:
+  enabled: true
+  # Nombre de jours d'historique à conserver
+  history_days: 30
+  # Fichier de stockage des données de performance
+  data_file: "/var/lib/netguard/performance.json"
+
+# Gestion des sauvegardes
+backup:
+  enabled: true
+  
+  # Fréquence des sauvegardes
+  schedule:
+    full: "0 2 * * 0"  # Tous les dimanches à 2h
+    incremental: "0 3 * * *"  # Tous les jours à 3h
+  
+  # Rétention des sauvegardes (en jours)
+  retention:
+    full: 30
+    incremental: 7
+  
+  # Niveau de compression (1-9, 9 = meilleur)
+  compression_level: 6
+  
+  # Chiffrement des sauvegardes
+  encryption:
+    enabled: false
+    # Clé de chiffrement (à générer avec: openssl rand -base64 32)
+    key: ""
+    algorithm: "AES256"
+  
+  # Stockage des sauvegardes
+  storage:
+    local:
+      enabled: true
+      path: "/backup/netguard"
+    
+    remote:
+      enabled: false
+      type: "sftp"  # sftp, s3, azure, google
+      host: "backup-server.example.com"
+      port: 22
+      username: "backup-user"
+      password: ""
+      # Pour SSH key authentication
+      ssh_key: "/home/user/.ssh/id_rsa"
+      path: "/backup/netguard"
+      
+    cloud:
+      enabled: false
+      # AWS S3
+      aws:
+        access_key: ""
+        secret_key: ""
+        bucket: "netguard-backups"
+        region: "us-east-1"
+      
+      # Azure Blob Storage
+      azure:
+        connection_string: ""
+        container: "netguard-backups"
+
+# ============================================
+# ADMINISTRATION RÉSEAU
+# ============================================
+
+network:
+  # Interface réseau principale
+  primary_interface: "eth0"
+  
+  # Sous-réseau local
+  subnet: "192.168.1.0/24"
+  
+  # Serveurs DNS
+  dns_servers:
+    - "8.8.8.8"
+    - "8.8.4.4"
+    - "1.1.1.1"
+  
+  # Paramètres de scan réseau
+  scan:
+    # Ports à scanner
+    ports:
+      - 22
+      - 80
+      - 443
+      - 3306
+      - 5432
+      - 6379
+      - 11211
+      - 27017
+      - 8080
+      - 8443
+    
+    # Type de scan (quick, normal, deep)
+    type: "normal"
+    
+    # Timeout pour chaque test (en secondes)
+    timeout: 5
+    
+    # Nombre maximum de threads pour le scan
+    max_threads: 100
+    
+    # Fichier de sortie par défaut
+    output_file: "/var/log/netguard/network_scan.json"
+  
+  # Monitoring de services réseau
+  services:
+    - name: "HTTP"
+      port: 80
+      check_interval: 60
+      expected_response: 200
+    
+    - name: "HTTPS"
+      port: 443
+      check_interval: 60
+      expected_response: 200
+    
+    - name: "SSH"
+      port: 22
+      check_interval: 60
+    
+    - name: "DNS"
+      port: 53
+      check_interval: 300
+
+# ============================================
+# SÉCURITÉ
+# ============================================
+
+security:
+  # Configuration SSH
+  ssh:
+    port: 22
+    # Désactiver l'authentification par mot de passe
+    password_authentication: false
+    # Autoriser l'authentification par clé
+    pubkey_authentication: true
+    # Chemin vers les clés autorisées
+    authorized_keys_file: "/home/user/.ssh/authorized_keys"
+    # Nombre maximum de tentatives de connexion
+    max_auth_tries: 3
+    # Temps avant déconnexion (en secondes)
+    login_grace_time: 60
+  
+  # Configuration du firewall
+  firewall:
+    enabled: true
+    
+    # Politique par défaut
+    default_policy:
+      input: "DROP"
+      forward: "DROP"
+      output: "ACCEPT"
+    
+    # Règles par défaut à autoriser
+    default_rules:
+      - "loopback"
+      - "established"
+      - "icmp"
+    
+    # Ports à autoriser
+    allowed_ports:
+      - 22
+      - 80
+      - 443
+      - 53
+      - 123
+    
+    # Plages d'IP autorisées
+    allowed_ips:
+      - "192.168.1.0/24"
+      - "10.0.0.0/8"
+    
+    # Plages d'IP bloquées
+    blocked_ips: []
+  
+  # Protection contre les attaques
+  protection:
+    # Activer Fail2Ban
+    fail2ban: true
+    
+    # Nombre maximum de connexions simultanées par IP
+    max_connections_per_ip: 10
+    
+    # Bloquer les IP après X tentatives échouées
+    block_after_failed_attempts: 5
+    
+    # Durée du blocage (en minutes)
+    block_duration: 60
+  
+  # Mises à jour automatiques
+  updates:
+    enabled: true
+    # Heure de vérification des mises à jour (format cron)
+    check_schedule: "0 4 * * *"
+    # Mises à jour automatiques de sécurité
+    auto_security_updates: true
+    # Redémarrer automatiquement après les mises à jour
+    auto_reboot: false
+
+# ============================================
+# ALERTES & NOTIFICATIONS
+# ============================================
+
+alerts:
+  # Notifications par email
+  email:
+    enabled: false
+    smtp:
+      server: "smtp.gmail.com"
+      port: 587
+      # Utiliser SSL/TLS
+      tls: true
+      ssl: false
+      username: "votre@email.com"
+      password: "votre-mot-de-passe"
+    sender:
+      name: "NetGuard"
+      email: "netguard@domaine.com"
+    recipients:
+      - "admin@domaine.com"
+    
+    # Sujet des emails d'alerte
+    subject_prefix: "[NetGuard Alert]"
+    
+    # Niveau minimum pour les alertes email
+    min_level: "WARNING"
+  
+  # Notifications Slack
+  slack:
+    enabled: false
+    webhook_url: "https://hooks.slack.com/services/XXX/YYY/ZZZ"
+    
+    # Canal Slack
+    channel: "#netguard-alerts"
+    
+    # Nom d'affichage
+    username: "NetGuard Bot"
+    
+    # Icône
+    icon_emoji: ":robot_face:"
+    
+    # Niveau minimum pour les alertes Slack
+    min_level: "ERROR"
+  
+  # Notifications via Webhook
+  webhook:
+    enabled: false
+    url: "https://votre-webhook.example.com/api/alerts"
+    
+    # Méthode HTTP (POST, PUT)
+    method: "POST"
+    
+    # Headers personnalisés
+    headers:
+      Content-Type: "application/json"
+      Authorization: "Bearer YOUR_TOKEN"
+    
+    # Niveau minimum pour les alertes webhook
+    min_level: "CRITICAL"
+  
+  # Notifications locales (syslog)
+  syslog:
+    enabled: true
+    facility: "local0"
+    
+    # Niveau minimum pour les alertes syslog
+    min_level: "INFO"
+  
+  # Notifications dans la console
+  console:
+    enabled: true
+    # Niveau minimum pour les alertes console
+    min_level: "DEBUG"
+
+# ============================================
+# LOGS
+# ============================================
+
+logging:
+  # Niveau de log global
+  level: "INFO"
+  
+  # Format des logs
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  
+  # Fichier de log principal
+  file:
+    enabled: true
+    path: "/var/log/netguard/netguard.log"
+    
+    # Rotation des logs
+    rotation:
+      enabled: true
+      max_size: "10MB"  # Taille maximale avant rotation
+      backup_count: 5   # Nombre de fichiers de backup
+    
+    # Compression des anciens logs
+    compression: true
+  
+  # Journaux système
+  syslog:
+    enabled: true
+    facility: "local0"
+  
+  # Journaux des modules
+  modules:
+    system_monitor: "INFO"
+    network_scan: "INFO"
+    backup_manager: "INFO"
+    firewall_manager: "INFO"
+    vulnerability_scan: "WARNING"
+
+# ============================================
+# SERVEURS À SURVEILLER
+# ============================================
+
+# Liste des serveurs à surveiller
+servers:
+  - name: "web-server-01"
+    ip: "192.168.1.10"
+    hostname: "web01.example.com"
+    ssh_port: 22
+    username: "admin"
+    # Mot de passe ou clé SSH (une seule méthode)
+    password: ""
+    ssh_key: "/home/user/.ssh/id_rsa"
+    type: "web"
+    os: "Ubuntu 22.04"
+    services:
+      - "nginx"
+      - "mysql"
+      - "php-fpm"
+    
+    # Alertes spécifiques pour ce serveur
+    alerts:
+      cpu_threshold: 85
+      memory_threshold: 80
+      disk_threshold: 90
+    
+    # Exclure de certains checks
+    excluded_checks:
+      - "temperature"
+  
+  - name: "db-server-01"
+    ip: "192.168.1.11"
+    hostname: "db01.example.com"
+    ssh_port: 22
+    username: "admin"
+    ssh_key: "/home/user/.ssh/id_rsa"
+    type: "database"
+    os: "Debian 11"
+    services:
+      - "postgresql"
+      - "redis"
+    
+    alerts:
+      cpu_threshold: 90
+      memory_threshold: 85
+      disk_threshold: 95
+  
+  - name: "monitor-server"
+    ip: "192.168.1.12"
+    hostname: "monitor.example.com"
+    username: "admin"
+    type: "monitoring"
+    os: "CentOS 8"
+    services:
+      - "prometheus"
+      - "grafana"
+      - "node_exporter"
+
+# ============================================
+# BASE DE DONNÉES
+# ============================================
+
+database:
+  # Utiliser une base de données pour stocker les données
+  enabled: false
+  
+  # Type de base de données (sqlite, mysql, postgresql)
+  type: "sqlite"
+  
+  # Configuration SQLite
+  sqlite:
+    path: "/var/lib/netguard/netguard.db"
+  
+  # Configuration MySQL
+  mysql:
+    host: "localhost"
+    port: 3306
+    username: "netguard"
+    password: ""
+    database: "netguard"
+  
+  # Configuration PostgreSQL
+  postgresql:
+    host: "localhost"
+    port: 5432
+    username: "netguard"
+    password: ""
+    database: "netguard"
